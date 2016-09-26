@@ -11,7 +11,7 @@ def cli():
     logging.basicConfig(level=logging.DEBUG)
 
 
-cli.add_command(commands.column_name)
+cli.add_command(commands.cluster_by_field)
 
 
 if __name__ == '__main__':
