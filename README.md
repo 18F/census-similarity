@@ -58,7 +58,8 @@ Execute a command and add the `--help` for a more thorough description, but at
 the high level:
 
 * `cluster_by_field` finds similar rows in a CSV based on a single field. This
-  has multiple tuning parameters
+  has multiple tuning parameters. Note that the clustering algorithm (DBSCAN)
+  is non-deterministic; results will vary on each run
 * `group_by` groups rows of a CSV by values in a particular column
 * `lookup` replaces "id"s with their names based on a lookup file
 
@@ -135,6 +136,93 @@ cat dataset.csv \
   * `value-field` the CSV column that contains the value in the lookup-file.
     Defaults to "name"
 
+Finally, let's try to tweak our results. Let's try slightly different distance
+algorithms and loosen our definition of similarity. Warning: this will run
+_much_ slower:
+
+```
+cat dataset.csv \
+  | cluster_by_field --eps 0.3 --min-samples 4 --distance-metric cosine \
+    --field-split trigram \
+  | group_by --min-group-size 2 --accumulation-field name
+```
+
+* `eps=0.3` - This parameter defines how close entries must be to form a
+  cluster. The "distance" between two strings is a value between 0.0 and 1.0.
+  By expanding the `eps` variable past the default `0.1`, we allow strings
+  which are much more dissimilar to be in the same cluster.
+* `min-samples=4` - This parameter describes the minimum number of samples to
+  form a cluster. The default of `2` allows for very small clusters, meaning
+  finer grained groupings of strings
+* `distance-metric=cosine` - This is a different distance metric from the
+  default ("jaccard"). We can also use "levenshtein" to measure the "edit"
+  distance instead
+* `field-split=trigram` - When comparing strings, we can look at sequences of
+  characters, sequences of pairs of characters, triplets, or comma-separated
+  lists. The default is "character"
+
+#### Clustering datasets by their columns
+As a more complicated example, let's try finding similar _fields_ within
+datasets, then cluster the datasets based on those shared fields. For example,
+if we two datasets, one with fields "SSN" and "First Name" and another with
+"ssns" and "name_frst" we'd want to mark those two datasets as "related".
+
+```
+cat vars.csv \
+  | cluster_by_field --field vname --group-field field_cluster \
+  | group_by --group-field dsids --accumulation-fields field_cluster \
+  | cluster_by_field --field field_cluster --field-split comma \
+    --group-field dataset_cluster \
+  | group_by --min-group-size 2 --group-field dataset_cluster \
+    --accumulation-field dsids \
+  | lookup --lookup-file dataset.csv --replacement-field dsids
+```
+
+Let's break that down -- we'll skim over pieces explained in the previous
+example.
+
+* `cat` - send the variables CSV to stdout to chain with later commands
+* `cluster_by_field` - cluster those variables by `vname`. Add the resulting
+  cluster id into a new column `field_cluster`
+* `group_by` - this is a bit different than what we did before. Now we want to
+  group by the _dataset_(s) each field are related to. The output will include
+  a row per dataset, with a column indicating which field-clusters the dataset
+  contains. Note that the `group_by` command knows to split comma-separated
+  values.
+* `cluster_by_field` - this time, we're clustering based on the presence of
+  field-clusters. The `field-split=comma` flag tells the program to look at
+  the list of field-clusters per row and to use _that_ when comparing
+  distances. This'll bring us to more familiar territory: a CSV with a column
+  indicating the cluster id of each row.
+* `group_by` - similar to the `group_by` in the simpler examples, this gets us
+  a row per cluster-of-datasets and a column indicating which datasets are
+  present in that cluster
+* `lookup` - finally, we want to replace those dataset ids with the dataset
+  names
+
+
+## Next steps
+
+This project was put together as a proof of concept. While basic functionality
+exists, it is by no means complete.
+
+From the **functionality** perspective, this application has focused on
+_string_ similarity as the core metric of similarity. We can build layers on
+top of that (e.g. clustering datasets by fields, per the example above), but
+there are other avenues of inspection that might be more helpful. For example,
+the Census datasets have relations (datasets may have "parents"); we've
+ignored this structure altogether. Similarly, we've ignored field types and
+other metadata which may have been useful (when properly weighed). More
+importantly, we're only working with the _metadata_ about these datasets now;
+clustering using the data proper would likely prove more fruitful.
+
+From the **technical** perspective, our young app has already picked up some
+baggage. Most notably, we are missing thorough code review (hopefully to be
+remedied soon) and automated tests. The existing code quality is a-okay for a
+quick pilot, but would be worth improving in a longer-term project. In
+specific, we'd recommend replacing many of the existing, custom functionality
+with frameworks like `pandas`, which includes well-tested, efficient
+libraries to solve many of these problems.
 
 ## Contributing
 
