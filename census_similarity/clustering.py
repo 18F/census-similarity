@@ -1,4 +1,3 @@
-from collections import defaultdict
 import logging
 from time import time
 
@@ -21,41 +20,21 @@ class ProgressTracker:
             self.next_time = time() + 5
 
 
-class ClusterTechnique:
-    """Each clustering technique must define the "transform" and "distance"
-    static methods"""
-    @classmethod
-    def distance_matrix(cls, uniques):
-        """Generate a numpy matrix of distances between entries in the
-        "uniques" list"""
-        matrix = []
-        progress = ProgressTracker(len(uniques))
+def distance_matrix(values, metric):
+    matrix = []
+    progress = ProgressTracker(len(values))
 
-        for lidx, left in enumerate(uniques):
-            progress.tick(lidx)
-            row = []
-            for right in uniques:
-                row.append(cls.distance(left, right))
-            matrix.append(row)
-        return np.array(matrix)
+    for lidx, left in enumerate(values):
+        progress.tick(lidx)
+        row = []
+        for right in values:
+            row.append(metric(left, right))
+        matrix.append(row)
+    return np.array(matrix)
 
-    @classmethod
-    def cluster_groups(cls, all_strings, eps=0.10, min_samples=2):
-        """Given a list of strings, cluster the uniques and return the
-        groups"""
-        transformed = [cls.transform(string) for string in all_strings]
-        unique = list(set(transformed))     # Needs _any_ order
-        similarity = cls.distance_matrix(unique)
-        clusterer = DBSCAN(eps, min_samples, metric='precomputed')
-        fit = clusterer.fit(similarity)
 
-        cluster_by_input = []
-        for value in transformed:
-            label = fit.labels_[unique.index(value)]
-            cluster_by_input.append(label)
-
-        groups = defaultdict(set)
-        for idx, cluster in enumerate(cluster_by_input):
-            groups[cluster].add(all_strings[idx])
-        del groups[-1]  # remove outliers
-        return groups
+def cluster_labels(values, metric, eps, min_samples):
+    similarity = distance_matrix(values, metric)
+    clusterer = DBSCAN(eps, min_samples, metric='precomputed')
+    fit = clusterer.fit(similarity)
+    return fit.labels_
