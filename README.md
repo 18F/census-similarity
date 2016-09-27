@@ -61,7 +61,8 @@ the high level:
   has multiple tuning parameters. Note that the clustering algorithm (DBSCAN)
   is non-deterministic; results will vary on each run
 * `group_by` groups rows of a CSV by values in a particular column
-* `lookup` replaces "id"s with their names based on a lookup file
+* `lookup` replaces "id"s with their names based on a lookup file; adds a new
+  column for the result
 
 ### Examples
 
@@ -114,14 +115,14 @@ cat dataset.csv \
   | group_by --min-group-size 2 --accumulation-field name
 ```
 
-A second method of achieving the same result would be to "lookup" the dataset
+A second method of achieving a similar result would be to "lookup" the dataset
 names by referencing their ids:
 
 ```
 cat dataset.csv \
   | cluster_by_field \
   | group_by --min-group-size 2 \
-  | lookup --lookup-file dataset.csv --replacement-field id
+  | lookup --lookup-file dataset.csv --source-field id
 ```
 
 * `lookup` converts ids from one CSV into their respective values, using a
@@ -129,8 +130,11 @@ cat dataset.csv \
   the other two have reasonable defaults.
   * `lookup-file` the file name we'll be using to find id-value pairs.
     "dataset.csv" in the above example
-  * `replacement-field` the CSV column that contains ids we want to replace.
+  * `source-field` the CSV column that contains ids we want to replace.
     We expect those ids to be comma-separated
+  * `destination-field` the CSV column to write the replacement to. This
+    defaults to "values", and will replace another column if there's a name
+    collision
   * `id-field` the CSV column that contains the ids in the lookup-file.
     Defaults to "id"
   * `value-field` the CSV column that contains the value in the lookup-file.
@@ -170,12 +174,12 @@ if we two datasets, one with fields "SSN" and "First Name" and another with
 ```
 cat vars.csv \
   | cluster_by_field --field vname --group-field field_cluster \
-  | group_by --group-field dsids --accumulation-fields field_cluster \
+  | group_by --group-field dsids --accumulation-field field_cluster \
   | cluster_by_field --field field_cluster --field-split comma \
     --group-field dataset_cluster \
   | group_by --min-group-size 2 --group-field dataset_cluster \
     --accumulation-field dsids \
-  | lookup --lookup-file dataset.csv --replacement-field dsids
+  | lookup --lookup-file dataset.csv --source-field dsids
 ```
 
 Let's break that down -- we'll skim over pieces explained in the previous

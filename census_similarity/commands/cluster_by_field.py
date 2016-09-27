@@ -33,7 +33,7 @@ def cluster_by_field(
     INPUT_FILE - CSV to read from, defaults to stdin
     OUTPUT_FILE - CSV to write to, defaults to stdout"""
     all_rows, writer = read_csv_write_header(
-        input_file, output_file, [field], lambda hdr: hdr + [group_field])
+        input_file, output_file, [field], group_field)
 
     splitter = getattr(splits, field_split)
     metric = getattr(metrics, distance_metric)

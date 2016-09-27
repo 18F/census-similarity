@@ -28,11 +28,14 @@ def read_csv_write_header(
     :param header:
         if None, use the input_file's header.
         if a callable, apply it to the input_file's header.
+        if a string, append it to the input_file's header (if not present)
         else, assume the header is a sequence of strings
     :return: pair of list of dicts (rows in the CSV), and a csv.DictWriter"""
     all_rows, fieldnames = read_rows(input_file, expected_fields)
-    if header is None:
+    if header is None or (isinstance(header, str) and header in fieldnames):
         header = fieldnames
+    elif isinstance(header, str):
+        header = fieldnames + [header]
     elif callable(header):
         header = header(fieldnames)
 
