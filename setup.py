@@ -16,7 +16,7 @@ setup(
         "scikit-learn"
     ],
     entry_points={"console_scripts": [
-        'cluster_by_field = census_similarity.commands:census_similarity',
+        'cluster_by_field = census_similarity.commands:cluster_by_field',
         'group_by = census_similarity.commands:group_by',
         'lookup = census_similarity.commands:lookup',
     ]}
