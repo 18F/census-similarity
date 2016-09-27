@@ -13,6 +13,8 @@ def cli():
 
 
 cli.add_command(commands.cluster_by_field)
+cli.add_command(commands.group_by)
+cli.add_command(commands.lookup)
 
 
 if __name__ == '__main__':
