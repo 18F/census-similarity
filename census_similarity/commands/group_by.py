@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
                 default=sys.stdout)
 @click.option('--group-field', default='_group', help='Field to group on')
 @click.option('--accumulation-field', default='id', help='Field to aggregate')
-def group_by(input_file, output_file, group_field, accumulation_field):
+@click.option('--min-group-size', type=int, default=1)
+def group_by(input_file, output_file, group_field, accumulation_field,
+             min_group_size):
     """Given a CSV, group rows with the same group_field. For a given group,
     collect all values from the accumulation_field column. Aware of
     comma-separated values
@@ -57,5 +59,6 @@ def group_by(input_file, output_file, group_field, accumulation_field):
             ids_by_group[group].update(filter(bool, ids))
 
     for group in sorted(ids_by_group.keys()):
-        ids = ','.join(sorted(ids_by_group[group]))
-        writer.writerow({group_field: group, accumulation_field: ids})
+        if len(ids_by_group[group]) >= min_group_size:
+            ids = ','.join(sorted(ids_by_group[group]))
+            writer.writerow({group_field: group, accumulation_field: ids})
