@@ -1,5 +1,0 @@
-click
-distance
-numpy
-scipy   # must be before scikit-learn
-scikit-learn
