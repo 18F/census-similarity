@@ -8,7 +8,7 @@ from census_similarity import commands
 
 @click.group()
 def cli():
-    """Command Line Interface for census similarity"""
+    """CSV similarity tools for the census"""
     logging.basicConfig(level=logging.DEBUG)
 
 

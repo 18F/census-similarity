@@ -18,26 +18,30 @@ logger = logging.getLogger(__name__)
 @click.option('--group-field', default='_group', help='Field to group on')
 @click.option('--accumulation-field', default='id', help='Field to aggregate')
 def group_by(input_file, output_file, group_field, accumulation_field):
-    """Group CSV rows by the requested fields.
+    """Given a CSV, group rows with the same group_field. For a given group,
+    collect all values from the accumulation_field column. Aware of
+    comma-separated values
 
+    \b
     For example:
     id, other, group
     1, a, A
     2, b, B
     3, c, A
 
+    \b
     becomes
     group, id
     A, "1, 3"
     B, 2
 
-    Further, this splits by a comma:
+    \b
+    This also generates the same output
     id, other, group
     "1, 2", a, A
     3, b, B
 
-    generates the same
-
+    \b
     INPUT_FILE - CSV to read from, defaults to stdin
     OUTPUT_FILE - CSV to write to, defaults to stdout"""
     all_rows, writer = read_csv_write_header(

@@ -26,8 +26,10 @@ from census_similarity.io import read_csv_write_header
 def cluster_by_field(
         eps, min_samples, distance_metric, field, field_split, group_field,
         input_file, output_file):
-    """Cluster similar CSV rows together.
+    """Cluster similar CSV rows together. Adds a new column to the CSV which
+    represents the cluster.
 
+    \b
     INPUT_FILE - CSV to read from, defaults to stdin
     OUTPUT_FILE - CSV to write to, defaults to stdout"""
     all_rows, writer = read_csv_write_header(
@@ -41,7 +43,7 @@ def cluster_by_field(
     groups = cluster_labels(values, metric, eps, min_samples)
     next_group_id = max(groups) + 1
     for row, group in zip(all_rows, groups):
-        if group == -1:
+        if group == -1:     # -1 indicates "outlier"
             group = next_group_id
             next_group_id += 1
         row[group_field] = group

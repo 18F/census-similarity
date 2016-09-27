@@ -1,3 +1,4 @@
+"""Distance metrics"""
 import distance
 from scipy import spatial
 

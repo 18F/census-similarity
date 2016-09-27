@@ -21,6 +21,9 @@ class ProgressTracker:
 
 
 def distance_matrix(values, metric):
+    """Generate a matrix of distances based on the `metric` calculation.
+    :param values: list of sequences, e.g. list of strings, list of tuples
+    :param metric: function (value, value) -> number between 0.0 and 1.0"""
     matrix = []
     progress = ProgressTracker(len(values))
 
@@ -34,6 +37,13 @@ def distance_matrix(values, metric):
 
 
 def cluster_labels(values, metric, eps, min_samples):
+    """Cluster data by the provided metric. Label the values by those
+    clusters.
+    :param values: list of sequences, e.g. list of strings, list of tuples
+    :param metric: function (value, value) -> number between 0.0 and 1.0
+    :param eps: maximum distance between points to be in a cluster
+    :param min_samples: minimum number of points before a cluster can be
+    created"""
     similarity = distance_matrix(values, metric)
     clusterer = DBSCAN(eps, min_samples, metric='precomputed')
     fit = clusterer.fit(similarity)
