@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="census_similarity",
-    version="master",
+    version="1.0.0",
     packages=find_packages(),
     classifiers=[
         'License :: Public Domain',
